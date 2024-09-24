@@ -1,0 +1,60 @@
+---
+import type { GetStaticPaths } from "astro";
+import { getCollection, render } from "astro:content";
+import { SHOW_BY_BUTTON } from "astro:env/server";
+
+import Layout from "../../layouts/Layout.astro";
+import BookScore from "../../components/bookScore.astro";
+
+export async function getStaticPaths () {
+  const books = await getCollection("books")
+
+  return books.map((book) => ({
+    params: { id: book.slug },
+    props: { book }
+  }))
+}
+
+const { book } = Astro.props
+const { data, slug } = book
+const { title, author, img, description, readtime, buy } = data
+
+const { Content } = await render(book)
+
+export const prerender = true
+---
+
+<Layout title={`${title} - Dev Books`}>
+  <div class="flex gap-12">
+    <aside class="flex flex-col items-center gap-4">
+      <a class="rounded w-72 h-auto" href="/">
+        Volver atras
+      </a>
+      <img
+        transition:name={`img-${slug}`}
+        class="rounded w-84 h-auto"
+        src={`/${img}`}
+        alt={title}>
+
+        <BookScore server:defer id={slug}>
+          <span class="text-xs opacity-75" slot="fallback">
+            Cargando puntuacion ...
+          </span>
+        </BookScore>
+
+        {
+          SHOW_BY_BUTTON &&
+          <a href=""></a>
+        }
+    </aside>
+    <main class="max-w-2xl">
+      <h1 class="text-4xl font-bold mb-4">
+        {title}
+      </h1>
+
+      <div class="prose dark:prose-invert">
+        <Content />
+      </div>
+    </main>
+  </div>
+</Layout>
